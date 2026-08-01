@@ -4,6 +4,10 @@
     font-family: 'poppins', sans-serif;
     box-sizing: border-box;
 }
+body {
+    overflow: hidden;
+    position: relative;
+}
 .container {
     width: 100vw;
     height: 100vh;
@@ -19,49 +23,65 @@
 }
 
 .content {
-    top: 50%;
+    top: 65%;
     position: absolute;
-    transform: tsranslateY(-50%);
+    transform: translateY(-50%);
     color: #fff;
+    background: rgba(255, 255, 255, 0.045);
+    backdrop-filter: blur(5px);
+    padding: 30px;
+    border-radius: 18px;
 }
 .content h1 {
     font-size: 64px;
     font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 .content h1 span {
-    color: #ff3753;
+    color: #ffca0c;
 }
-.content button {
-    background: transparent;
-    background-color: 2px solid #fff;
+.notify-btn{
+    background: none;
+    background-color: #ffca0c;
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     outline: none;
-    padding: 12px 25px;
-    color: #fff;
+    padding: 12px 16px;
+    color: hsl(272, 100%, 7%);
     display: flex;
     align-items: center;
     margin-top: 30px;
     cursor: pointer;
+    position: relative;
 }
+
 .content-button {
     width: 15px;
     margin-left: 10px;
 }
 .launch-time {
-    display: flex;
+    width: 80%;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 .launch-time div {
-    flex-basis: 100px;
+    text-align: left;
+    color: #fff;
 }
 .launch-time div p{
-    font-size: 60px;
+    font-size: 42px;
+    font-family: 'Poppins', sans-serif;
     margin-bottom: -14;
 }
 .ship {
-    width: 150px;
+    width: 40px;
     position: absolute;
     right: 10%;
     bottom: 0;
-    animation: ship 4s infinnite;
+    animation: ship 4s infinite;
+    background-color: #ffca0c;
 }
 @keyframes ship{
     0%{
