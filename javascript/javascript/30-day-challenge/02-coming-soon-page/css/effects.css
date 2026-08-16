@@ -1,0 +1,23 @@
+/* ==========================================================================
+   EFFECTS
+   All @keyframes live here, plus (from Step 7) the neon glow utilities,
+   gradient text helpers and flicker animations.
+
+   Keeping every keyframe in one file means you can see your whole motion
+   vocabulary at a glance instead of hunting for it across five files.
+   ========================================================================== */
+
+@keyframes ship {
+    0% {
+        bottom: 0;
+        opacity: 0;
+    }
+    100% {
+        bottom: 105%;
+        opacity: 1;
+    }
+}
+
+/* Note for Step 5/7: animating `bottom` forces the browser to recalculate
+   layout on every frame. `transform: translateY()` runs on the compositor
+   instead - same look, far smoother. We rewrite this then. */

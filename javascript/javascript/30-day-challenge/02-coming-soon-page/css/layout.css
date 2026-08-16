@@ -1,0 +1,33 @@
+.page-wrapper {
+    min-height: 100vh;
+    background-image: url(images/space.jpg);
+    background-position: center;
+    background-size: cover;
+    padding: 0 8%;
+}
+
+
+.page-inner {
+    position: relative;
+}
+
+.content {
+    top: 65%;
+    position: absolute;
+    transform: translateY(-50%);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.045);
+    backdrop-filter: blur(5px);
+    padding: 30px;
+    border-radius: 18px;
+}
+
+.content h1 {
+    font-size: 64px;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.content h1 span {
+    color: var(--color-accent);
+}

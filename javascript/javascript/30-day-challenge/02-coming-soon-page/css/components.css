@@ -1,0 +1,75 @@
+/* ==========================================================================
+   COMPONENTS
+   Reusable things: buttons, the countdown, the logo, the ship.
+   A component should not care where on the page it sits - no absolute
+   positioning relative to the viewport, no top/left tied to the layout.
+
+   Step 4 turns .notify-btn into .btn .btn-neon (a Bootstrap variant)
+   and .launch-time into a proper block with modifier classes.
+   ========================================================================== */
+
+/* --- Logo ---------------------------------------------------------------- */
+.logo {
+    width: 120px;
+    padding: 20px 0;
+    cursor: pointer;
+}
+
+/* --- Button -------------------------------------------------------------- */
+.notify-btn {
+    background: none;
+    background-color: var(--color-accent);
+    border: none;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-button);
+    outline: none;
+    padding: 12px 16px;
+    color: hsl(272, 100%, 7%);
+    display: flex;
+    align-items: center;
+    margin-top: 30px;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Was .content-button, which matched nothing because the <img> had no class.
+   Renamed to match the block it belongs to, and wired up in the HTML. */
+.notify-btn__icon {
+    width: 15px;
+    margin-left: 10px;
+}
+
+/* --- Countdown ----------------------------------------------------------- */
+.launch-time {
+    width: 80%;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.launch-time div {
+    text-align: left;
+    color: #fff;
+}
+
+.launch-time div p {
+    font-size: 42px;
+    font-family: 'Poppins', sans-serif;
+    /* FIXED: was `margin-bottom: -14` - no unit, so the browser threw the
+       whole declaration away. Invalid declarations show struck through in
+       DevTools; worth training your eye for it. */
+    margin-bottom: -14px;
+}
+
+/* --- Ship ---------------------------------------------------------------- */
+.ship {
+    width: 40px;
+    position: absolute;
+    right: 10%;
+    bottom: 0;
+    animation: ship 4s infinite;
+    /* This background-color is why the ship looks filled - it is a PNG, so
+       CSS cannot touch its pixels, only the box behind them.
+       Step 5 swaps it for an inline SVG with stroke: currentColor. */
+    background-color: var(--color-accent);
+}

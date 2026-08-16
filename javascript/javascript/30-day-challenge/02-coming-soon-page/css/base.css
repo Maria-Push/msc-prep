@@ -1,0 +1,87 @@
+/* ==========================================================================
+   BASE
+   Element-level defaults. No classes - only element and universal selectors.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   The universal reset from your original file is GONE. Two reasons:
+
+   1. Bootstrap Reboot already does the useful half of it. Reboot sets
+      box-sizing: border-box on *, ::before and ::after, zeroes body margin,
+      and strips default margins off headings and lists. Re-declaring it is
+      dead weight.
+
+   2. `* { font-family: ... }` was the actively harmful half. It set the font
+      on EVERY element in the document, which is why headings could never
+      have their own face - the universal selector was overriding inheritance
+      everywhere. Setting the font once on <body> and letting it cascade is
+      what lets you override it for headings below.
+
+   Expect a small visual shift when you load this: Bootstrap gives <p> a
+   bottom margin and <h1> a half-rem one, where your reset had zeroed them.
+   That is correct - Step 3 handles spacing properly with utility classes.
+   -------------------------------------------------------------------------- */
+
+
+/* --- Document ------------------------------------------------------------ */
+
+html {
+    /* Anchors and any scroll-to behave gently. */
+    scroll-behavior: smooth;
+}
+
+body {
+    /* Font, colour and background all arrive via the --bs-* bridge in
+       tokens.css - Bootstrap's own body rule reads them. Nothing to set
+       here. That is the payoff of the bridge: no override rule needed. */
+
+    /* TODO (Step 3/6): overflow:hidden clips content on short viewports.
+       It is only here to hide the ship animation. We fix it with a
+       positioned containing block instead. */
+    overflow: hidden;
+    position: relative;
+    min-height: 100vh;
+}
+
+
+/* --- Headings ------------------------------------------------------------
+   Set by hand because Bootstrap 5.3 has no --bs-headings-font-family CSS
+   variable (see the note in tokens.css). Colour DOES come through the
+   bridge via --bs-heading-color, so it is deliberately absent here.
+   -------------------------------------------------------------------------- */
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+}
+
+
+/* --- Selection ----------------------------------------------------------
+   A one-line detail that makes a theme feel finished. Try highlighting text
+   on the page before and after.
+   -------------------------------------------------------------------------- */
+
+::selection {
+    background: rgb(var(--accent-rgb) / 0.35);
+    color: var(--text-primary);
+}
+
+
+/* --- Motion safety -------------------------------------------------------
+   Some people get motion sickness or migraines from moving interfaces, and
+   set a system preference to say so. This one block honours it across the
+   entire site. Worth adding NOW, before Step 6 fills the background with
+   moving dots.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

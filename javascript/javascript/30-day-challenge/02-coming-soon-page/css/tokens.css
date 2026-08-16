@@ -1,0 +1,262 @@
+/* ==========================================================================
+   TOKENS
+   --------------------------------------------------------------------------
+   Variables only. Nothing here paints anything.
+
+   THREE TIERS, and the rule that makes the whole system work:
+     TIER 1  palette    raw colour values.   NEVER referenced by a component.
+     TIER 2  semantic   roles ("what is this FOR").  References tier 1 only.
+     TIER 3  component  per-widget knobs.    References tier 2 only.
+
+   Why bother? Because "make the accent pink instead of gold" should be ONE
+   edit in tier 2, not forty edits across your components. Tier 1 is your
+   paint box; tier 2 is the decision about where paint goes; tier 3 is the
+   handle you grab when one specific widget needs to disagree.
+
+   If you ever write `color: var(--pink-500)` in components.css, you have
+   skipped tier 2 and the system has started to rot. Always go through a role.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   TIER 1 — PALETTE
+   Raw values. Named by WHAT THEY ARE, not what they do.
+   The -rgb variants exist so you can do rgb(var(--x-rgb) / 0.4) and get any
+   opacity of a colour without defining a new variable for every alpha level.
+   This is exactly the trick Bootstrap uses with --bs-primary-rgb.
+   ========================================================================== */
+
+:root {
+    /* --- Purple: the base. A ramp from near-black to a lit violet. -------- */
+    --purple-950: #08000f;   /* deepest, page floor                */
+    --purple-900: #100020;   /* your original background           */
+    --purple-850: #17032e;
+    --purple-800: #1f0640;   /* raised surfaces                    */
+    --purple-700: #2d0b5e;
+    --purple-600: #3f157f;   /* borders, circuit traces            */
+    --purple-500: #5a25a8;
+
+    /* --- Pink: the primary neon. -------------------------------------- */
+    --pink-500: #ff2d95;
+    --pink-400: #ff5cae;
+    --pink-300: #ff8fc7;
+    --pink-500-rgb: 255 45 149;
+
+    /* --- Gold: the secondary neon (your original accent). -------------- */
+    --gold-500: #ffca0c;
+    --gold-400: #ffd94a;
+    --gold-300: #ffe685;
+    --gold-500-rgb: 255 202 12;
+
+    /* --- Blue: the neutral, calming third. Not cyan - cyan would read as
+           "vaporwave", this reads as "circuitry". ------------------------ */
+    --blue-500: #4d8dff;
+    --blue-400: #7aa9ff;
+    --blue-300: #a6c5ff;
+    --blue-500-rgb: 77 141 255;
+
+    /* --- Neutrals. Note they are tinted toward purple, not pure grey.
+           Pure #888 on a purple background looks dirty; a violet-leaning
+           grey looks intentional. --------------------------------------- */
+    --white: #ffffff;
+    --white-rgb: 255 255 255;
+    --lavender-100: #e8e0f5;
+    --lavender-300: #b9a8d4;
+    --lavender-500: #8574a3;
+    --ink: #0a0014;          /* for text ON a bright neon fill      */
+}
+
+
+/* ==========================================================================
+   TIER 2 — SEMANTIC ROLES
+   Named by JOB. A component asks for "the primary accent", not "pink".
+   Swap the right-hand side here and the whole site re-themes.
+   ========================================================================== */
+
+:root {
+    /* --- Surfaces ------------------------------------------------------ */
+    --surface-base:    var(--purple-900);
+    --surface-sunken:  var(--purple-950);
+    --surface-raised:  var(--purple-800);
+    --surface-glass:   rgb(var(--white-rgb) / 0.045);  /* your frosted panel */
+
+    /* --- Text ---------------------------------------------------------- */
+    --text-primary:    var(--white);
+    --text-body:       var(--lavender-100);
+    --text-muted:      var(--lavender-300);
+    --text-inverse:    var(--ink);      /* on top of a neon fill */
+
+    /* --- Accents ------------------------------------------------------- */
+    --accent:              var(--pink-500);
+    --accent-rgb:          var(--pink-500-rgb);
+    --accent-secondary:    var(--gold-500);
+    --accent-secondary-rgb: var(--gold-500-rgb);
+    --accent-tertiary:     var(--blue-500);
+    --accent-tertiary-rgb: var(--blue-500-rgb);
+
+    /* --- Lines --------------------------------------------------------- */
+    --border-subtle: rgb(var(--white-rgb) / 0.12);
+    --border-neon:   rgb(var(--accent-rgb) / 0.55);
+
+    /* --- Gradients -----------------------------------------------------
+       Defined once here so headline text and button fills stay in sync. */
+    --gradient-hot:  linear-gradient(100deg, var(--pink-400), var(--gold-400));
+    --gradient-cool: linear-gradient(100deg, var(--blue-400), var(--pink-400));
+}
+
+
+/* ==========================================================================
+   TIER 2b — NON-COLOUR SCALES
+   Same discipline, different property. A fixed set of steps stops you from
+   inventing 13px, 14px, 15px and 17px on four different days.
+   ========================================================================== */
+
+:root {
+    /* --- Typography ---------------------------------------------------- */
+    --font-display: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+    --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    --text-xs:   0.75rem;
+    --text-sm:   0.875rem;
+    --text-base: 1rem;
+    --text-lg:   1.25rem;
+    --text-xl:   1.75rem;
+    --text-2xl:  2.5rem;
+    --text-3xl:  clamp(2.5rem, 7vw, 4rem);   /* the headline - fluid */
+
+    --tracking-wide:  0.08em;   /* mono fonts breathe better spaced out */
+    --tracking-wider: 0.18em;   /* for small uppercase labels           */
+
+    /* --- Space: a 4px-based scale -------------------------------------- */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+
+    /* --- Radius -------------------------------------------------------- */
+    --radius-sm:   6px;
+    --radius-md:   12px;
+    --radius-card: 18px;        /* kept from your original */
+    --radius-pill: 999px;
+
+    /* --- Glow: the neon-sign recipe -------------------------------------
+       A real neon tube has three visual parts: a hot near-white core, a
+       tight saturated halo, and a wide soft bloom. Stacking three shadows
+       of increasing blur and decreasing opacity fakes all three.
+       You pass the colour in via --glow-rgb at the point of use. */
+    --glow-rgb: var(--accent-rgb);
+    --glow-sm:
+        0 0 4px  rgb(var(--glow-rgb) / 0.85),
+        0 0 12px rgb(var(--glow-rgb) / 0.45);
+    --glow-md:
+        0 0 5px  rgb(var(--glow-rgb) / 0.95),
+        0 0 16px rgb(var(--glow-rgb) / 0.55),
+        0 0 34px rgb(var(--glow-rgb) / 0.28);
+    --glow-lg:
+        0 0 6px  rgb(var(--glow-rgb) / 1),
+        0 0 22px rgb(var(--glow-rgb) / 0.65),
+        0 0 48px rgb(var(--glow-rgb) / 0.4),
+        0 0 90px rgb(var(--glow-rgb) / 0.2);
+
+    --shadow-button: 0 4px 6px rgb(0 0 0 / 0.2);   /* kept from your original */
+
+    /* --- Motion --------------------------------------------------------- */
+    --ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+    --speed-fast: 140ms;
+    --speed-med:  280ms;
+}
+
+
+/* ==========================================================================
+   TIER 3 — COMPONENT TOKENS
+   One block per component. These are the only variables components.css
+   should read. Note every value points at tier 2, never tier 1.
+   ========================================================================== */
+
+:root {
+    /* --- Button --------------------------------------------------------- */
+    --btn-bg:          transparent;
+    --btn-fg:          var(--accent);
+    --btn-border:      var(--border-neon);
+    --btn-radius:      var(--radius-pill);
+    --btn-glow:        var(--glow-sm);
+    --btn-glow-hover:  var(--glow-lg);
+    --btn-padding:     var(--space-3) var(--space-8);
+
+    /* --- Glass card ----------------------------------------------------- */
+    --card-bg:      var(--surface-glass);
+    --card-border:  var(--border-subtle);
+    --card-radius:  var(--radius-card);
+    --card-blur:    12px;
+    --card-padding: var(--space-8);
+
+    /* --- Countdown ------------------------------------------------------ */
+    --countdown-digit-size:  var(--text-2xl);
+    --countdown-digit-color: var(--text-primary);
+    --countdown-label-color: var(--text-muted);
+    --countdown-label-size:  var(--text-xs);
+
+    /* --- Ship ----------------------------------------------------------- */
+    --ship-size:    40px;
+    --ship-stroke:  var(--accent-secondary);
+    --ship-stroke-width: 1.5;
+}
+
+
+/* ==========================================================================
+   BRIDGE — HANDING YOUR TOKENS TO BOOTSTRAP
+   --------------------------------------------------------------------------
+   Bootstrap 5.3 reads its own values from --bs-* custom properties at
+   runtime. Overwrite them and every Bootstrap component, utility class and
+   default follows your theme without you writing a single override rule.
+
+   Two things worth knowing, because both surprise people:
+
+   1. Many --bs-* vars come in a matching -rgb pair. Utilities that need
+      transparency (.text-primary uses --bs-primary-rgb) read the RGB one.
+      Set only the hex and half your utilities keep Bootstrap's blue.
+
+   2. There is NO --bs-headings-font-family. Bootstrap 5.3 exposes
+      --bs-heading-color but the headings FONT is a Sass variable, not a CSS
+      one - it does not exist at runtime on the CDN build. So headings are
+      set by hand in base.css. 
+   ========================================================================== */
+
+:root {
+    /* --- Typography ----------------------------------------------------- */
+    --bs-body-font-family: var(--font-body);
+    --bs-body-font-size:   var(--text-base);
+    --bs-body-line-height: 1.65;
+
+    /* --- Core colours ---------------------------------------------------- */
+    --bs-body-bg:        var(--surface-base);
+    --bs-body-color:     var(--text-body);
+    --bs-heading-color:  var(--text-primary);
+    --bs-emphasis-color: var(--text-primary);
+    --bs-secondary-color: var(--text-muted);
+
+    /* --- Theme colours: hex AND rgb, per note 1 above -------------------- */
+    --bs-primary:       var(--accent);
+    --bs-primary-rgb:   var(--accent-rgb);
+    --bs-secondary:     var(--accent-secondary);
+    --bs-secondary-rgb: var(--accent-secondary-rgb);
+    --bs-info:          var(--accent-tertiary);
+    --bs-info-rgb:      var(--accent-tertiary-rgb);
+
+    /* --- Links ----------------------------------------------------------- */
+    --bs-link-color:       var(--accent);
+    --bs-link-color-rgb:   var(--accent-rgb);
+    --bs-link-hover-color: var(--pink-300);
+
+    /* --- Borders and shape ----------------------------------------------- */
+    --bs-border-color:  var(--border-subtle);
+    --bs-border-radius: var(--radius-md);
+
+    /* --- Focus ring: keyboard users must still see where they are.
+           Make it match the theme rather than deleting it. ---------------- */
+    --bs-focus-ring-color: rgb(var(--accent-rgb) / 0.4);
+    --bs-focus-ring-width: 3px;
+}
