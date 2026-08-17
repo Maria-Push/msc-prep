@@ -45,15 +45,16 @@
     position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
+    color: var(--gold-300);
 }
 
 .launch-time div {
     text-align: left;
-    color: #fff;
+    color: var(--color-light);
 }
 
 .launch-time div p {
-    font-size: 42px;
+    font-size: -var(--font-size-xxl);
     font-family: 'Poppins', sans-serif;
     /* FIXED: was `margin-bottom: -14` - no unit, so the browser threw the
        whole declaration away. Invalid declarations show struck through in

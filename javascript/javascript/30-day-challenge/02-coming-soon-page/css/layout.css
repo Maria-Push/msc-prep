@@ -15,15 +15,15 @@
     top: 65%;
     position: absolute;
     transform: translateY(-50%);
-    color: #fff;
-    background: rgba(255, 255, 255, 0.045);
+    color: var(--color-light);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(5px);
     padding: 30px;
-    border-radius: 18px;
+    border-radius: var(--border-radius);
 }
 
 .content h1 {
-    font-size: 64px;
+    font-size: -var(--font-size-xxl);
     font-weight: 600;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
