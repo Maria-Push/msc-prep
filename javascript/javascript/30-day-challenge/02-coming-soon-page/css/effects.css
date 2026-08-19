@@ -1,12 +1,160 @@
 /* ==========================================================================
    EFFECTS
-   All @keyframes live here, plus (from Step 7) the neon glow utilities,
-   gradient text helpers and flicker animations.
+   All @keyframes live here, plus (from Update 6) the layered background
+   system and the reusable neon utilities.
 
-   Keeping every keyframe in one file means you can see your whole motion
-   vocabulary at a glance instead of hunting for it across five files.
+   Keeping every keyframe in one file means your whole motion vocabulary is
+   readable at a glance instead of scattered across five stylesheets.
    ========================================================================== */
 
+
+/* ==========================================================================
+   BACKGROUND LAYER STACK
+   --------------------------------------------------------------------------
+   Painted back to front. .page-wrapper gives you three layers for free -
+   the element itself, ::before and ::after - so only ONE real element had
+   to be added to the markup (the canvas).
+
+       z 0    base fill              .page-wrapper background-color
+       z 10   glow blobs             .page-wrapper::before
+       z 20   circuit texture        .page-wrapper::after
+       z 30   signal dots            .signal-layer (canvas)
+       z 100  content                .container / .site-header
+
+   Every decorative layer repeats the same four declarations: absolute,
+   inset:0, a z-index token, and pointer-events:none. Writing them
+   identically each time is what makes this file scannable - and
+   pointer-events:none is not optional, or the background eats clicks on
+   your form.
+
+   All of this lives in effects.css rather than layout.css on purpose:
+   delete this file and the page is still completely usable, just flat.
+   That is the test for what belongs here.
+   ========================================================================== */
+
+.page-wrapper {
+    /* Contains the blend modes below. Without it, mix-blend-mode: screen
+       would reach past .page-wrapper and blend against the page root. */
+    isolation: isolate;
+
+    /* The ship flies past the edges; without this you get scrollbars. */
+    overflow: hidden;
+}
+
+
+/* --- Layer 1: glow blobs -------------------------------------------------
+   Four radial gradients on ONE element rather than four divs. Each
+   `radial-gradient(W H at X Y, colour, transparent)` is a soft ellipse
+   placed by percentage.
+
+   No `filter: blur()` here, and that is deliberate. A radial gradient is
+   already perfectly smooth, so blurring it buys nothing and costs a lot -
+   a full-viewport blur is one of the most expensive things you can ask a
+   browser to composite every frame. Reach for blur only when the shape has
+   edges that need destroying.
+
+   mix-blend-mode: screen is what makes these read as LIGHT rather than
+   paint. Screen is additive: overlapping colours brighten toward white,
+   exactly like two coloured lamps pointed at the same wall.
+   -------------------------------------------------------------------------- */
+
+.page-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: var(--layer-blobs);
+    pointer-events: none;
+
+    background-image:
+        /* magenta wash behind the panel - the mockup's dominant glow */
+        radial-gradient(62% 55% at 24% 16%, rgb(var(--accent-rgb) / 0.34), transparent 70%),
+        /* violet mass upper right */
+        radial-gradient(58% 52% at 84% 26%, rgb(var(--purple-500-rgb) / 0.60), transparent 72%),
+        /* periwinkle rising from the bottom edge */
+        radial-gradient(74% 58% at 46% 106%, rgb(var(--accent-tertiary-rgb) / 0.24), transparent 70%),
+        /* a single warm note, low left, so the field is not all cool */
+        radial-gradient(40% 38% at 8% 88%, rgb(var(--accent-warm-rgb) / 0.14), transparent 70%);
+
+    opacity: var(--blob-opacity);
+    mix-blend-mode: screen;
+
+    /* Very slow, and scaled from the centre so no edge ever enters frame. */
+    animation: blob-drift var(--blob-drift-time) ease-in-out infinite alternate;
+}
+
+
+/* --- Layer 2: circuit texture --------------------------------------------
+   THE MASK TRICK. An SVG loaded with url() is an isolated document and
+   cannot read your CSS variables, so a background-image would put its
+   colour outside your token system forever.
+
+   As a MASK it supplies only the shape; the colour comes from
+   background-color, which is a token. Change --texture-color and the whole
+   board retints.
+
+   Two mask layers are stacked here:
+     1. the circuit tile, repeated
+     2. a vertical gradient, opaque in the middle and transparent at top
+        and bottom
+   `mask-composite: intersect` keeps only what is opaque in BOTH - which
+   fades the texture out toward the edges exactly like the mockup does,
+   without touching the SVG.
+   -------------------------------------------------------------------------- */
+
+.page-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: var(--layer-texture);
+    pointer-events: none;
+
+    background-color: var(--texture-color);
+    opacity: var(--texture-opacity);
+
+    -webkit-mask-image:
+        url(../images/circuit.svg),
+        linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent);
+    mask-image:
+        url(../images/circuit.svg),
+        linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent);
+
+    mask-repeat: repeat, no-repeat;
+    mask-size: var(--texture-size), 100% 100%;
+    mask-composite: intersect;
+    -webkit-mask-composite: source-in;   /* older WebKit keyword */
+
+    animation: texture-drift var(--texture-drift-time) linear infinite;
+}
+
+
+/* --- Layer 3: signal dots ------------------------------------------------
+   One canvas element, painted by js/signals.js. See the chat for why this
+   layer is canvas while the two above are pure CSS.
+   -------------------------------------------------------------------------- */
+
+.signal-layer {
+    position: absolute;
+    inset: 0;
+    z-index: var(--layer-signals);
+    pointer-events: none;
+
+    /* The canvas BITMAP is sized in JS (scaled by devicePixelRatio so it is
+       not blurry on a high-DPI screen). These two keep the CSS box filling
+       the wrapper regardless of that bitmap size. */
+    width: 100%;
+    height: 100%;
+}
+
+
+/* ==========================================================================
+   KEYFRAMES
+   ========================================================================== */
+
+/* --- Ship ---------------------------------------------------------------
+   Note for Update 8: animating `bottom` forces a layout recalculation on
+   every frame. `transform: translateY()` runs on the compositor instead -
+   same look, far smoother. Rewritten when the ship becomes an SVG.
+   -------------------------------------------------------------------------- */
 @keyframes ship {
     0% {
         bottom: 0;
@@ -18,6 +166,211 @@
     }
 }
 
-/* Note for Step 5/7: animating `bottom` forces the browser to recalculate
-   layout on every frame. `transform: translateY()` runs on the compositor
-   instead - same look, far smoother. We rewrite this then. */
+
+/* --- Dialog -------------------------------------------------------------
+   Rises and settles rather than just appearing. The small translate is what
+   makes it read as arriving; without it a scale-only animation feels like
+   the box was always there and simply got bigger.
+   -------------------------------------------------------------------------- */
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+
+/* --- Neon flicker --------------------------------------------------------
+   Applied to the gradient X.
+
+   A tube that has been up for years does not blink evenly. It does three
+   things, and the keyframes below reproduce all three:
+
+     1. BURSTS  - two or three stutters in quick succession, then nothing.
+        Real gas discharge fails in clusters, not on a metronome.
+     2. UNEVEN DEPTH - some dips go nearly dark, others barely dim. A tube
+        that always dropped to the same brightness would read as a fade,
+        not a fault.
+     3. A LONG HOLD - most of the cycle is steady. The quiet stretch is what
+        makes the next burst land; without it you have a strobe.
+
+   The glow radius drops with the opacity, because a dimming tube emits less
+   light into the air around it - holding the drop-shadow constant while the
+   glyph dims looks like a glitch in the render rather than a physical
+   object. Animating filter and opacity together is what sells it.
+
+   Prime-ish, non-repeating percentages keep the pattern from feeling
+   authored. 12s cycle. base.css neutralises all of this under
+   prefers-reduced-motion.
+   -------------------------------------------------------------------------- */
+@keyframes neon-flicker {
+    /* --- long steady hold --- */
+    0%, 12% {
+        opacity: 1;
+        filter: drop-shadow(0 0 14px rgb(var(--accent-secondary-rgb) / 0.55));
+    }
+
+    /* --- burst one: hard stutter --- */
+    13% { opacity: 0.28; filter: drop-shadow(0 0 2px rgb(var(--accent-secondary-rgb) / 0.12)); }
+    14% { opacity: 1;    filter: drop-shadow(0 0 16px rgb(var(--accent-secondary-rgb) / 0.60)); }
+    15% { opacity: 0.45; filter: drop-shadow(0 0 5px rgb(var(--accent-secondary-rgb) / 0.22)); }
+    17% { opacity: 1;    filter: drop-shadow(0 0 14px rgb(var(--accent-secondary-rgb) / 0.55)); }
+
+    /* --- hold --- */
+    38% {
+        opacity: 1;
+        filter: drop-shadow(0 0 14px rgb(var(--accent-secondary-rgb) / 0.55));
+    }
+
+    /* --- burst two: the near-death one, with a struggle back --- */
+    39% { opacity: 0.15; filter: drop-shadow(0 0 1px rgb(var(--accent-secondary-rgb) / 0.08)); }
+    40% { opacity: 0.6;  filter: drop-shadow(0 0 7px rgb(var(--accent-secondary-rgb) / 0.28)); }
+    41% { opacity: 0.2;  filter: drop-shadow(0 0 2px rgb(var(--accent-secondary-rgb) / 0.10)); }
+    43% { opacity: 1;    filter: drop-shadow(0 0 20px rgb(var(--accent-secondary-rgb) / 0.72)); }
+    45% { opacity: 1;    filter: drop-shadow(0 0 14px rgb(var(--accent-secondary-rgb) / 0.55)); }
+
+    /* --- long hold, the longest stretch of the cycle --- */
+    77% {
+        opacity: 1;
+        filter: drop-shadow(0 0 14px rgb(var(--accent-secondary-rgb) / 0.55));
+    }
+
+    /* --- burst three: a single quick blink --- */
+    78% { opacity: 0.35; filter: drop-shadow(0 0 3px rgb(var(--accent-secondary-rgb) / 0.15)); }
+    79% { opacity: 1;    filter: drop-shadow(0 0 18px rgb(var(--accent-secondary-rgb) / 0.65)); }
+
+    /* --- and settle --- */
+    82%, 100% {
+        opacity: 1;
+        filter: drop-shadow(0 0 14px rgb(var(--accent-secondary-rgb) / 0.55));
+    }
+}
+
+
+/* --- Neon breathe --------------------------------------------------------
+   For "Stay tuned!". Same family of effect, an octave quieter: no dropouts,
+   just a slow swell in glow. A healthy tube that hums rather than a failing
+   one that stutters.
+
+   Two animations, one vocabulary - that is what makes them read as parts of
+   the same sign rather than two unrelated effects.
+   -------------------------------------------------------------------------- */
+@keyframes neon-breathe {
+    0%, 100% {
+        opacity: 0.88;
+        text-shadow:
+            0 0 5px  rgb(var(--accent-secondary-rgb) / 0.40),
+            0 0 14px rgb(var(--accent-secondary-rgb) / 0.20);
+    }
+    50% {
+        opacity: 1;
+        text-shadow:
+            0 0 8px  rgb(var(--accent-secondary-rgb) / 0.65),
+            0 0 22px rgb(var(--accent-secondary-rgb) / 0.38);
+    }
+}
+
+
+/* --- Ring breathe --------------------------------------------------------
+   For the panel's gradient border. Quieter still.
+
+   The rule of thumb worth keeping: the LARGER the element, the SMALLER the
+   amplitude. The same 0.5 opacity swing that gives a single letter
+   character makes a whole panel look like it is failing.
+   -------------------------------------------------------------------------- */
+@keyframes ring-breathe {
+    0%, 100% { opacity: 0.7; }
+    50%      { opacity: 1; }
+}
+
+
+/* --- Blob drift ----------------------------------------------------------
+   Barely-there movement over most of a minute. Scaled slightly larger than
+   1 the whole time so the gradients' soft edges never wander into frame.
+
+   Note this animates `transform`, not `background-position`. Transforms are
+   composited on the GPU; background-position forces a repaint of a
+   full-viewport element every frame.
+   -------------------------------------------------------------------------- */
+@keyframes blob-drift {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1.08);
+    }
+    50% {
+        transform: translate3d(-2.5%, 1.8%, 0) scale(1.14);
+    }
+    100% {
+        transform: translate3d(2%, -2.2%, 0) scale(1.10);
+    }
+}
+
+
+/* --- Texture drift -------------------------------------------------------
+   The board creeps by exactly one tile over 90 seconds, so the loop is
+   seamless: at 100% the pattern is one full tile along, which is visually
+   identical to 0%.
+
+   mask-position is animated rather than transform here because the element
+   must stay put - only the pattern inside it moves.
+   -------------------------------------------------------------------------- */
+@keyframes texture-drift {
+    from { mask-position: 0 0, 0 0; -webkit-mask-position: 0 0, 0 0; }
+    to   { mask-position: var(--texture-size) var(--texture-size), 0 0;
+           -webkit-mask-position: var(--texture-size) var(--texture-size), 0 0; }
+}
+
+
+/* --- Transmission pulse --------------------------------------------------
+   Travels the full width of the track. `left` is animated rather than
+   transform because the track width is unknown at author time and
+   percentage transforms resolve against the ELEMENT, not its parent - so
+   translateX(100%) would move the dot by its own width, not the track's.
+
+   One of the few cases where animating a layout property is the correct
+   choice. The element is 10px and there is exactly one of it, so the cost
+   is nil; correctness wins over the usual transform rule.
+   -------------------------------------------------------------------------- */
+@keyframes transmit-run {
+    0%   { left: 0;    opacity: 0; }
+    10%  {             opacity: 1; }
+    90%  {             opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+}
+
+
+/* --- Node hit ------------------------------------------------------------
+   Each node's moment of being reached. Only 12% of the cycle is spent lit,
+   which is what makes the light look like it is travelling rather than
+   every node pulsing together.
+   -------------------------------------------------------------------------- */
+@keyframes transmit-hit {
+    0%, 8% {
+        background: var(--transmit-idle);
+        box-shadow: none;
+        transform: scale(1);
+    }
+    14% {
+        background: var(--transmit-live);
+        box-shadow: var(--glow-sm);
+        transform: scale(1.5);
+    }
+    20% {
+        background: var(--transmit-live);
+        box-shadow: var(--glow-sm);
+        transform: scale(1.2);
+    }
+    36%, 100% {
+        background: var(--transmit-idle);
+        box-shadow: none;
+        transform: scale(1);
+    }
+}

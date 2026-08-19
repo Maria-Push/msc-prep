@@ -1,76 +1,659 @@
 /* ==========================================================================
    COMPONENTS
-   Reusable things: buttons, the countdown, the logo, the ship.
-   A component should not care where on the page it sits - no absolute
-   positioning relative to the viewport, no top/left tied to the layout.
-
-   Step 4 turns .notify-btn into .btn .btn-neon (a Bootstrap variant)
-   and .launch-time into a proper block with modifier classes.
+   Reusable things: logo, button, signup form, glass panel, dialog,
+   countdown, ship. A component should not care where on the page it sits.
    ========================================================================== */
 
 /* --- Logo ---------------------------------------------------------------- */
 .logo {
     width: 120px;
-    padding: 20px 0;
-    cursor: pointer;
 }
 
-/* --- Button -------------------------------------------------------------- */
-.notify-btn {
-    background: none;
-    background-color: var(--color-accent);
-    border: none;
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-button);
-    outline: none;
-    padding: 12px 16px;
-    color: hsl(272, 100%, 7%);
-    display: flex;
-    align-items: center;
-    margin-top: 30px;
-    cursor: pointer;
+
+/* ==========================================================================
+   BUTTON  —  .btn-neon
+   --------------------------------------------------------------------------
+   Renamed from .notify-btn. The old name described WHERE it was used; this
+   one describes WHAT IT IS, so the next button can reuse it honestly.
+
+   Built as a MODIFIER on Bootstrap's .btn, not a replacement. .btn already
+   handles appearance:none, font:inherit, line-height, the disabled state
+   and the focus-ring plumbing. Use both together: class="btn btn-neon".
+
+   Note --glow-rgb on the first line. Set it here and var(--glow-lg) below
+   resolves in this component's colour - one line retints the whole button.
+   ========================================================================== */
+
+.btn-neon {
+    --glow-rgb: var(--accent-rgb);
+
+    background-color: var(--btn-bg);
+    color: var(--btn-fg);
+    border: 1px solid var(--btn-border);
+    border-radius: var(--btn-radius);
+    padding: var(--btn-padding);
+
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    white-space: nowrap;
+
+    box-shadow: var(--btn-glow);
+    transition:
+        box-shadow var(--speed-med) var(--ease-out),
+        transform var(--speed-fast) var(--ease-out),
+        background-color var(--speed-fast) var(--ease-out);
+}
+
+/* :focus-visible, not :focus. The browser decides when a ring is useful -
+   shown for keyboard users, hidden on mouse click. That is how you get a
+   clean look WITHOUT the outline:none accessibility crime. */
+.btn-neon:hover,
+.btn-neon:focus-visible {
+    background-color: var(--pink-400);
+    box-shadow: var(--btn-glow-hover);
+    color: var(--btn-fg);
+    transform: translateY(-1px);
+}
+
+.btn-neon:active {
+    transform: translateY(0);
+    box-shadow: var(--glow-sm);
+}
+
+
+/* ==========================================================================
+   GLASS PANEL  —  .glass-panel
+   --------------------------------------------------------------------------
+   Moved here from layout.css and renamed from .content. It has no
+   positioning left - every declaration is appearance - which makes it a
+   component, not a place.
+
+   THE GLASS IS FOUR SEPARATE INGREDIENTS, not one background:
+     1. backdrop-filter blur + SATURATE
+     2. a translucent violet fill
+     3. a hairline border (see the gradient ring below)
+     4. an inset highlight along the top edge
+
+   Ingredient 1's `saturate` is the one everyone skips. Blur alone washes
+   the colour out of whatever is behind the panel, so the glass goes grey
+   and dead. Push saturation past 100% and the colour behind comes back
+   alive. Comment it out and reload - the difference is not subtle.
+
+   Ingredient 4 is the inset 0 1px 0 line in the box-shadow stack: a single
+   bright pixel along the top lip, faking light catching the edge of a real
+   sheet of glass. It is the difference between "frosted panel" and
+   "grey box".
+   ========================================================================== */
+
+.glass-panel {
+    --glow-rgb: var(--accent-rgb);
+
+    /* The column class decides how the panel RESPONDS across breakpoints;
+       this decides how wide it may ever get. Two constraints, tighter wins. */
+    max-width: var(--content-max-width);
+    margin-inline: auto;
+
+    /* Containing block for the gradient ring below. */
     position: relative;
+
+    /* Everything inside the panel centres. text-align is INHERITED, so
+       this one declaration reaches the subheader, the headline and the
+       form - and any child that should disagree opts out explicitly
+       (see .countdown below). Setting it once at the top and overriding
+       the exception beats setting it on four separate children. */
+    text-align: center;
+
+    color: var(--text-body);
+    background: var(--card-bg);
+    backdrop-filter: blur(var(--card-blur)) saturate(165%);
+    padding: var(--card-padding);
+    border-radius: var(--card-radius);
+
+    box-shadow:
+        /* 4. the lit top lip */
+        inset 0 1px 0 var(--card-highlight),
+        /* real neon lights BOTH sides of the tube - this is the inward
+           spill across the surface it is mounted on */
+        inset 0 0 40px rgb(var(--glow-rgb) / 0.07),
+        /* depth, so the panel sits above the page rather than on it */
+        0 24px 60px rgb(0 0 0 / 0.55),
+        /* and the outward glow */
+        var(--glow-sm);
 }
 
-/* Was .content-button, which matched nothing because the <img> had no class.
-   Renamed to match the block it belongs to, and wired up in the HTML. */
-.notify-btn__icon {
-    width: 15px;
-    margin-left: 10px;
+
+/* --- The gradient ring ---------------------------------------------------
+   A `border` cannot be a gradient. The standard workaround is a pseudo
+   element that covers the whole box, filled with the gradient, then has its
+   MIDDLE CUT OUT so only a 1px frame survives.
+
+   How the cut works: two mask layers are stacked. The first is clipped to
+   the content-box (everything inside the 1px padding), the second covers
+   the whole element. `mask-composite: exclude` keeps only what is in the
+   second but NOT the first - which is exactly the 1px frame.
+
+   inset: 0 works cleanly here because the panel has no CSS border. An
+   absolutely positioned child resolves against its containing block's
+   PADDING box, so a border would have shifted this ring inward.
+   -------------------------------------------------------------------------- */
+
+.glass-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+
+    background: var(--gradient-cool);
+
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    mask-composite: exclude;
+
+    /* Decoration must never eat clicks on the form underneath it. */
+    pointer-events: none;
+
+    /* The border gets the same idea as the sign, an octave quieter: a long
+       slow swell rather than a stutter. Big surfaces need LESS movement
+       than small ones - the same amplitude that reads as characterful on a
+       single letter reads as broken on a whole panel. */
+    animation: ring-breathe 9s ease-in-out infinite;
 }
 
-/* --- Countdown ----------------------------------------------------------- */
-.launch-time {
-    width: 80%;
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    color: var(--gold-300);
+
+/* --- The headline --------------------------------------------------------
+   Moved here from layout.css along with the panel.
+   -------------------------------------------------------------------------- */
+
+.glass-panel h1 {
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: var(--tracking-normal);
+    text-transform: uppercase;
+    color: var(--text-primary);
+    text-wrap: balance;
 }
 
-.launch-time div {
-    text-align: left;
-    color: var(--color-light);
+/* The X.
+   background-clip: text paints the gradient THROUGH the glyph shapes, so
+   the text has no colour of its own - which is why `color` must go
+   transparent, and why text-shadow does nothing here (there is no glyph
+   colour left to cast one). Try text-shadow and watch nothing happen; the
+   glow has to come from filter: drop-shadow(), which operates on the
+   rendered pixels instead. */
+.glass-panel h1 span {
+    background-image: var(--gradient-hot);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    filter: drop-shadow(0 0 14px rgb(var(--accent-secondary-rgb) / 0.55));
+
+    /* Irregular on purpose. Evenly spaced dips read as a blinking cursor;
+       a real failing tube stutters and then holds. Long cycle so it is a
+       surprise rather than a tic. */
+    animation: neon-flicker 12s infinite;
 }
 
-.launch-time div p {
-    font-size: -var(--font-size-xxl);
-    font-family: 'Poppins', sans-serif;
-    /* FIXED: was `margin-bottom: -14` - no unit, so the browser threw the
-       whole declaration away. Invalid declarations show struck through in
-       DevTools; worth training your eye for it. */
-    margin-bottom: -14px;
+
+/* ==========================================================================
+   SIGNUP FORM  —  .signup
+   --------------------------------------------------------------------------
+   Every rule scoped under .signup on purpose. You are theming THIS form,
+   not every .form-control you will ever write.
+   ========================================================================== */
+
+.signup {
+    max-width: 34rem;
+
+    /* THE FIX FOR THE OFF-LOOKING PILL.
+       text-align: center centres INLINE content inside a box. It does not
+       move the box itself. The form is a block with a max-width, so it was
+       still sitting hard against the left edge with its own contents
+       centred inside it - which reads as more wrong than either extreme.
+
+       margin-inline: auto is what centres a BLOCK: equal automatic margins
+       on both sides. Two different mechanisms, and knowing which one you
+       need is most of CSS centring. */
+    margin-inline: auto;
 }
 
-/* --- Ship ---------------------------------------------------------------- */
+.signup .form-control {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-fg);
+    padding: var(--input-padding);
+    font-family: var(--font-body);
+
+    transition:
+        border-color var(--speed-fast) var(--ease-out),
+        background-color var(--speed-fast) var(--ease-out);
+}
+
+/* Bootstrap re-applies its own background on focus, which would flash the
+   field pale for a frame. Restating it keeps the input dark. */
+.signup .form-control:focus {
+    background-color: var(--input-bg);
+    border-color: var(--input-border-focus);
+    color: var(--input-fg);
+    box-shadow: none;            /* the group handles the glow - below */
+}
+
+.signup .form-control::placeholder {
+    color: var(--input-placeholder);
+    opacity: 1;                  /* Firefox dims placeholders by default */
+}
+
+
+/* --- The pill, and the gotcha ---------------------------------------------
+   .rounded-pill on .input-group does nothing useful: Bootstrap sets each
+   CHILD's corners individually - first child keeps its left corners and
+   loses its right, last child does the reverse. That is what welds two
+   controls into one unit, and it is why a radius on the wrapper is
+   irrelevant. So the radius goes on the children: outer corners get the
+   pill, the seam in the middle stays square.
+   -------------------------------------------------------------------------- */
+
+.signup .input-group > .form-control {
+    border-top-left-radius: var(--input-radius);
+    border-bottom-left-radius: var(--input-radius);
+    padding-left: var(--space-6);   /* clear the curve */
+}
+
+.signup .input-group > .btn {
+    border-top-right-radius: var(--btn-radius);
+    border-bottom-right-radius: var(--btn-radius);
+}
+
+/* :focus-within matches a parent when any descendant has focus - so the
+   welded pair reacts as ONE control, which is how the eye already reads it. */
+.signup .input-group:focus-within {
+    --glow-rgb: var(--accent-rgb);
+    border-radius: var(--input-radius);
+    box-shadow: var(--glow-sm);
+}
+
+
+/* ==========================================================================
+   SUBHEADER
+   ========================================================================== */
+
+.subheader {
+    /* No max-width and no text-wrap: balance - see the note below. Centring
+       is inherited from .glass-panel, so there is nothing to declare here. */
+    font-family: var(--font-display);
+    letter-spacing: var(--tracking-wider);
+    font-size: var(--text-xs);
+    color: var(--accent-tertiary);
+
+    /* max-width and text-wrap: balance are BOTH gone.
+       balance evens out line lengths, which is exactly what was causing the
+       sentence to split down the middle. And the 48ch cap was forcing an
+       early wrap regardless of how wide the panel got.
+       Removing both lets the sentence run the full width of the container
+       and break only where it naturally must - and the one break we DO want
+       is forced explicitly by .subheader__cta below. */
+}
+
+/* display:block on an inline <span> is what forces the break - no <br>,
+   and unlike <br> it can be undone at a breakpoint. */
+.subheader__cta {
+    display: block;              /* forces the break - no <br> needed */
+    margin-top: var(--space-3);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wider);
+    color: var(--accent-secondary);
+
+    /* NOTE THE DIFFERENCE FROM THE X.
+       This text is NOT gradient-clipped, so it still has a glyph colour -
+       which means text-shadow works here. The X had to use
+       filter: drop-shadow() because its glyphs are transparent.
+       Same visual goal, two different properties, decided entirely by
+       whether the text has a colour of its own. */
+    text-shadow:
+        0 0 6px  rgb(var(--accent-secondary-rgb) / 0.55),
+        0 0 18px rgb(var(--accent-secondary-rgb) / 0.30);
+
+    /* A slow breathe, not a flicker. This tube is healthy - it just hums. */
+    animation: neon-breathe 6s ease-in-out infinite;
+}
+
+
+/* ==========================================================================
+   COUNTDOWN
+   --------------------------------------------------------------------------
+   This block used to opt out of the panel's centring with
+   `text-align: left`. That rule is gone.
+
+   It was the right call when the panel's contents were left-aligned: a
+   digit and its label are a unit, and units read better sharing an edge.
+   But centring the panel changed the context - a centred headline above a
+   left-aligned number row does not read as "deliberately different", it
+   reads as broken alignment, which is exactly what you spotted.
+
+   The lesson is that alignment is RELATIVE. An element is not left- or
+   centre-aligned in isolation; it is aligned or misaligned with respect to
+   its neighbours. When the neighbours change, revisit the exception.
+
+   Now it simply inherits `text-align: center` from .glass-panel, so digits
+   and labels centre inside each column and the whole row shares an axis
+   with the headline above it.
+   ========================================================================== */
+
+.countdown__digit {
+    font-family: var(--font-display);
+    font-size: var(--countdown-digit-size);
+    font-weight: 600;
+    color: var(--countdown-digit-color);
+    line-height: 1;
+    margin-bottom: var(--space-1);
+}
+
+.countdown__label {
+    display: block;              /* <span> is inline; this makes it stack */
+    font-family: var(--font-display);
+    font-size: var(--countdown-label-size);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--countdown-label-color);
+}
+
+
+/* ==========================================================================
+   CONFIRMATION DIALOG  —  .dialog-neon
+   --------------------------------------------------------------------------
+   Native <dialog>, opened with .showModal(), which gives you free:
+       - the ::backdrop pseudo-element
+       - Tab trapped inside
+       - Escape closes it
+       - the rest of the page marked inert for AT and keyboard
+   Those are the four things hand-rolled modals get wrong.
+   ========================================================================== */
+
+.dialog-neon {
+    --glow-rgb: var(--accent-rgb);
+
+    /* The UA stylesheet gives <dialog> a white background, a black border
+       and its own padding. All three have to go. */
+    border: 1px solid var(--dialog-border);
+    background: var(--dialog-bg);
+    color: var(--text-body);
+    padding: var(--dialog-padding);
+
+    /* margin:auto centres it - a modal dialog sits in the top layer and is
+       sized to its content. */
+    margin: auto;
+    max-width: min(92vw, var(--dialog-max-width));
+    border-radius: var(--dialog-radius);
+
+    backdrop-filter: blur(var(--card-blur)) saturate(165%);
+    box-shadow:
+        inset 0 1px 0 var(--card-highlight),
+        0 24px 70px rgb(0 0 0 / 0.6),
+        var(--glow-md);
+}
+
+/* The backdrop is a real pseudo-element - style it like any other box. */
+.dialog-neon::backdrop {
+    background: rgb(7 1 15 / 0.72);
+    backdrop-filter: blur(4px);
+}
+
+/* A <dialog> is display:none until opened, so [open] is the animation hook.
+   This animates the OPEN only; animating a close needs @starting-style and
+   transition-behavior: allow-discrete - worth reading once this is clear. */
+.dialog-neon[open] {
+    animation: dialog-in var(--speed-med) var(--ease-out);
+}
+
+.dialog-neon[open]::backdrop {
+    animation: backdrop-in var(--speed-med) var(--ease-out);
+}
+
+.dialog-neon__eyebrow {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--accent-tertiary);
+}
+
+.dialog-neon__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-xl);
+    color: var(--text-primary);
+}
+
+.dialog-neon__body {
+    margin: 0 0 var(--space-6);
+    color: var(--text-muted);
+}
+
+/* Echoing the address back is what makes the confirmation feel real. */
+.dialog-neon__email {
+    font-family: var(--font-display);
+    color: var(--accent-secondary);
+    word-break: break-all;   /* long addresses must not blow out the box */
+}
+
+
+/* ==========================================================================
+   SHIP
+   Still a PNG, so CSS can only colour the box behind it - which is why the
+   background-color is gone rather than retinted. Update 8 replaces it with
+   an inline SVG using stroke: currentColor.
+   ========================================================================== */
+
 .ship {
-    width: 40px;
+    width: var(--ship-size);
     position: absolute;
     right: 10%;
     bottom: 0;
     animation: ship 4s infinite;
-    /* This background-color is why the ship looks filled - it is a PNG, so
-       CSS cannot touch its pixels, only the box behind them.
-       Step 5 swaps it for an inline SVG with stroke: currentColor. */
-    background-color: var(--color-accent);
+}
+
+
+/* --- Error variant --------------------------------------------------------
+   A modifier class, not a second component. Only what DIFFERS is restated:
+   the border and glow shift from magenta to amber, which reads as "warning"
+   without leaving the palette. Everything else is inherited from
+   .dialog-neon, so a change there still reaches both.
+   -------------------------------------------------------------------------- */
+
+.dialog-neon--error {
+    --glow-rgb: var(--accent-warm-rgb);
+    border-color: var(--dialog-border-error);
+}
+
+.dialog-neon--error .dialog-neon__eyebrow {
+    color: var(--accent-warm);
+}
+
+
+/* ==========================================================================
+   HONEYPOT  —  .signup__trap
+   --------------------------------------------------------------------------
+   Must be invisible to people but PRESENT in the DOM as a normal text input,
+   because the whole trick depends on a bot seeing a fillable field.
+
+   Which is why this is not `display: none`. Most form-filling bots skip
+   display:none and visibility:hidden fields specifically to avoid traps.
+   Pushing it out of the layout with position:absolute keeps it "real"
+   while putting it nowhere a human can reach.
+   ========================================================================== */
+
+.signup__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+
+/* ==========================================================================
+   TRANSMISSION INDICATOR  —  .transmit
+   --------------------------------------------------------------------------
+   Five nodes on a trace with a pulse running between them, in the same
+   visual language as the background canvas. The point is that the wait
+   belongs to THIS page - a generic spinner would break the fiction the rest
+   of the design is maintaining.
+
+   All motion here is CSS, not canvas, and that is the right call by the
+   rule from Update 6: one small element, a path known in advance, a fixed
+   duration. Canvas would buy nothing and cost a render loop.
+
+   States are driven by a single data-state attribute set from JS. Keeping
+   every visual state in CSS and letting JS flip ONE attribute is far easier
+   to reason about than JS reaching in and setting styles directly.
+   ========================================================================== */
+
+.transmit {
+    margin-top: var(--space-6);
+}
+
+/* [hidden] is a real HTML attribute with default styling, but Bootstrap's
+   display utilities can out-specify it. Restating it here guarantees the
+   element is gone until JS removes the attribute. */
+.transmit[hidden] {
+    display: none;
+}
+
+.transmit__track {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    max-width: 15rem;
+    margin-inline: auto;
+    padding-block: var(--space-2);
+}
+
+/* The trace the nodes sit on. */
+.transmit__track::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--transmit-track-width);
+    background: var(--transmit-idle);
+    opacity: 0.5;
+}
+
+.transmit__node {
+    position: relative;   /* lift above the trace */
+    width: var(--transmit-node-size);
+    height: var(--transmit-node-size);
+    border-radius: 50%;
+    background: var(--transmit-idle);
+    transition: background var(--speed-fast) var(--ease-out),
+                box-shadow var(--speed-fast) var(--ease-out);
+}
+
+/* The travelling dot. */
+.transmit__pulse {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: calc(var(--transmit-node-size) + 3px);
+    height: calc(var(--transmit-node-size) + 3px);
+    margin-top: calc(var(--transmit-node-size) / -2 - 1.5px);
+    border-radius: 50%;
+    background: var(--transmit-live);
+    opacity: 0;
+}
+
+.transmit__status {
+    margin: var(--space-3) 0 0;
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    min-height: 1.2em;    /* reserve the line so nothing jumps as text changes */
+}
+
+
+/* --- State: sending -------------------------------------------------------
+   The pulse runs the track on a loop. Each node lights as the pulse reaches
+   it - achieved purely with animation-delay per node, staggered across the
+   same cycle length. No JS timing involved, so the two can never drift.
+   -------------------------------------------------------------------------- */
+
+.transmit[data-state="sending"] .transmit__pulse {
+    animation: transmit-run var(--transmit-speed) linear infinite;
+}
+
+.transmit[data-state="sending"] .transmit__node {
+    --glow-rgb: var(--accent-rgb);
+    animation: transmit-hit var(--transmit-speed) linear infinite;
+}
+
+/* nth-child staggering. Five nodes across one cycle: 0%, 20%, 40%, 60%, 80%
+   of the duration, expressed as negative delays so they start mid-cycle
+   rather than waiting to begin. */
+.transmit[data-state="sending"] .transmit__node:nth-child(1) { animation-delay: 0s; }
+.transmit[data-state="sending"] .transmit__node:nth-child(2) { animation-delay: calc(var(--transmit-speed) * 0.2); }
+.transmit[data-state="sending"] .transmit__node:nth-child(3) { animation-delay: calc(var(--transmit-speed) * 0.4); }
+.transmit[data-state="sending"] .transmit__node:nth-child(4) { animation-delay: calc(var(--transmit-speed) * 0.6); }
+.transmit[data-state="sending"] .transmit__node:nth-child(5) { animation-delay: calc(var(--transmit-speed) * 0.8); }
+
+
+/* --- State: done ---------------------------------------------------------
+   Everything lights gold at once and holds. Half a second of "landed"
+   before the dialog opens is what makes the transaction feel completed
+   rather than merely finished.
+   -------------------------------------------------------------------------- */
+
+.transmit[data-state="done"] .transmit__node {
+    --glow-rgb: var(--accent-secondary-rgb);
+    background: var(--transmit-done);
+    box-shadow: var(--glow-sm);
+    animation: none;
+}
+
+.transmit[data-state="done"] .transmit__track::before {
+    background: var(--transmit-done);
+    opacity: 0.9;
+}
+
+.transmit[data-state="done"] .transmit__status {
+    color: var(--accent-secondary);
+}
+
+
+/* --- State: failed -------------------------------------------------------- */
+
+.transmit[data-state="failed"] .transmit__node {
+    background: var(--accent-warm);
+    animation: none;
+    opacity: 0.6;
+}
+
+.transmit[data-state="failed"] .transmit__status {
+    color: var(--accent-warm);
+}
+
+
+/* --- Disabled form while in flight ---------------------------------------
+   :disabled is set by JS on both controls. Styling it is not optional -
+   a control that ignores clicks but looks identical to one that does not is
+   worse than no feedback at all.
+   -------------------------------------------------------------------------- */
+
+.signup .form-control:disabled,
+.signup .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

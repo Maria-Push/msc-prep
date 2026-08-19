@@ -3,112 +3,126 @@
    --------------------------------------------------------------------------
    Variables only. Nothing here paints anything.
 
-   THREE TIERS, and the rule that makes the whole system work:
+   THREE TIERS:
      TIER 1  palette    raw colour values.   NEVER referenced by a component.
      TIER 2  semantic   roles ("what is this FOR").  References tier 1 only.
      TIER 3  component  per-widget knobs.    References tier 2 only.
 
-   Why bother? Because "make the accent pink instead of gold" should be ONE
-   edit in tier 2, not forty edits across your components. Tier 1 is your
-   paint box; tier 2 is the decision about where paint goes; tier 3 is the
-   handle you grab when one specific widget needs to disagree.
-
-   If you ever write `color: var(--pink-500)` in components.css, you have
-   skipped tier 2 and the system has started to rot. Always go through a role.
+   PALETTE UPDATED to match the ProjectX mockup:
+     - the base is much darker than before (near-black violet, not #100020)
+     - magenta shifted slightly red, to match the mockup's buttons and prices
+     - added an AMBER, which is the second stop in the mockup's gold headline
+       gradient and the top of the featured pricing card
+     - added a PERIWINKLE for the small uppercase labels
    ========================================================================== */
 
 
 /* ==========================================================================
    TIER 1 — PALETTE
-   Raw values. Named by WHAT THEY ARE, not what they do.
-   The -rgb variants exist so you can do rgb(var(--x-rgb) / 0.4) and get any
-   opacity of a colour without defining a new variable for every alpha level.
-   This is exactly the trick Bootstrap uses with --bs-primary-rgb.
+   Named by WHAT THEY ARE, not what they do.
+   The -rgb variants let you write rgb(var(--x-rgb) / 0.4) for any opacity
+   without defining a variable per alpha level - the same trick Bootstrap
+   uses with --bs-primary-rgb.
    ========================================================================== */
 
 :root {
-    /* --- Purple: the base. A ramp from near-black to a lit violet. -------- */
-    --purple-950: #08000f;   /* deepest, page floor                */
-    --purple-900: #100020;   /* your original background           */
-    --purple-850: #17032e;
-    --purple-800: #1f0640;   /* raised surfaces                    */
-    --purple-700: #2d0b5e;
-    --purple-600: #3f157f;   /* borders, circuit traces            */
-    --purple-500: #5a25a8;
+    /* --- Purple: the base. Darker than before, per the mockup. ---------- */
+    --purple-950: #07010f;   /* page floor - almost black                */
+    --purple-900: #0d0219;   /* base surface                             */
+    --purple-850: #150829;
+    --purple-800: #1d0f3a;   /* raised surfaces / card fills             */
+    --purple-700: #2b1657;
+    --purple-600: #3d2179;   /* card borders in the mockup               */
+    --purple-500: #55309e;
+    --purple-600-rgb: 61 33 121;
+    --purple-500-rgb: 85 48 158;
 
-    /* --- Pink: the primary neon. -------------------------------------- */
-    --pink-500: #ff2d95;
-    --pink-400: #ff5cae;
-    --pink-300: #ff8fc7;
-    --pink-500-rgb: 255 45 149;
+    /* --- Magenta: the primary neon. Buttons, prices, the highlight word. */
+    --pink-500: #ff2e7e;
+    --pink-400: #ff5c9b;
+    --pink-300: #ff8fbb;
+    --pink-500-rgb: 255 46 126;
 
-    /* --- Gold: the secondary neon (your original accent). -------------- */
-    --gold-500: #ffca0c;
-    --gold-400: #ffd94a;
-    --gold-300: #ffe685;
-    --gold-500-rgb: 255 202 12;
+    /* --- Gold + amber: the mockup's headline gradient runs gold -> amber. */
+    --gold-500: #ffc328;
+    --gold-400: #ffd45c;
+    --gold-300: #ffe391;
+    --gold-500-rgb: 255 195 40;
 
-    /* --- Blue: the neutral, calming third. Not cyan - cyan would read as
-           "vaporwave", this reads as "circuitry". ------------------------ */
-    --blue-500: #4d8dff;
-    --blue-400: #7aa9ff;
-    --blue-300: #a6c5ff;
-    --blue-500-rgb: 77 141 255;
+    --amber-500: #ff8a3d;
+    --amber-500-rgb: 255 138 61;
 
-    /* --- Neutrals. Note they are tinted toward purple, not pure grey.
-           Pure #888 on a purple background looks dirty; a violet-leaning
-           grey looks intentional. --------------------------------------- */
+    /* --- Periwinkle: the calm third. The mockup uses this for small
+           uppercase labels like "FOR DEVELOPERS & ARCHITECTS". ---------- */
+    --blue-500: #6c8cff;
+    --blue-400: #8b9dff;
+    --blue-300: #aebaff;
+    --blue-500-rgb: 108 140 255;
+
+    /* --- Neutrals, tinted toward violet. Pure grey reads as dirty on a
+           purple ground; a violet-leaning grey reads as intentional. ---- */
     --white: #ffffff;
     --white-rgb: 255 255 255;
-    --lavender-100: #e8e0f5;
-    --lavender-300: #b9a8d4;
-    --lavender-500: #8574a3;
-    --ink: #0a0014;          /* for text ON a bright neon fill      */
+    --lavender-100: #ece7f7;
+    --lavender-300: #b3a8d1;
+    --lavender-500: #7d709d;
+    --ink: #07010f;          /* text ON a bright neon fill */
 }
 
 
 /* ==========================================================================
    TIER 2 — SEMANTIC ROLES
-   Named by JOB. A component asks for "the primary accent", not "pink".
-   Swap the right-hand side here and the whole site re-themes.
+   Components ask for a JOB, never a colour. Swap the right-hand side here
+   and the whole page re-themes.
    ========================================================================== */
 
 :root {
     /* --- Surfaces ------------------------------------------------------ */
-    --surface-base:    var(--purple-900);
+    /* Dropped one step darker (was --purple-900). The blobs and the signal
+       dots are both ADDITIVE - they brighten whatever is under them - so
+       the darker the floor, the more contrast they have to work against.
+       Lifting the floor is the fastest way to wash out an effect like this. */
+    --surface-base:    var(--purple-950);
     --surface-sunken:  var(--purple-950);
     --surface-raised:  var(--purple-800);
-    --surface-glass:   rgb(var(--white-rgb) / 0.045);  /* your frosted panel */
+    /* The mockup's cards are a translucent violet lift over the base,
+       not a white frost. That is what keeps them feeling lit from within. */
+    --surface-glass:   rgb(var(--purple-600-rgb) / 0.22);
 
     /* --- Text ---------------------------------------------------------- */
     --text-primary:    var(--white);
     --text-body:       var(--lavender-100);
     --text-muted:      var(--lavender-300);
-    --text-inverse:    var(--ink);      /* on top of a neon fill */
+    --text-faint:      var(--lavender-500);
+    --text-inverse:    var(--ink);
 
     /* --- Accents ------------------------------------------------------- */
-    --accent:              var(--pink-500);
-    --accent-rgb:          var(--pink-500-rgb);
-    --accent-secondary:    var(--gold-500);
+    --accent:               var(--pink-500);
+    --accent-rgb:           var(--pink-500-rgb);
+    --accent-secondary:     var(--gold-500);
     --accent-secondary-rgb: var(--gold-500-rgb);
-    --accent-tertiary:     var(--blue-500);
-    --accent-tertiary-rgb: var(--blue-500-rgb);
+    --accent-tertiary:      var(--blue-400);
+    --accent-tertiary-rgb:  var(--blue-500-rgb);
+    --accent-warm:          var(--amber-500);
+    --accent-warm-rgb:      var(--amber-500-rgb);
 
     /* --- Lines --------------------------------------------------------- */
-    --border-subtle: rgb(var(--white-rgb) / 0.12);
+    --border-subtle: rgb(var(--purple-500-rgb) / 0.55);
     --border-neon:   rgb(var(--accent-rgb) / 0.55);
 
     /* --- Gradients -----------------------------------------------------
-       Defined once here so headline text and button fills stay in sync. */
-    --gradient-hot:  linear-gradient(100deg, var(--pink-400), var(--gold-400));
+       Straight from the mockup:
+         hot   = the gold headline ("All Systems. No Guesswork")
+         fire  = the featured pricing card, amber into magenta
+         cool  = periwinkle into magenta, for secondary emphasis          */
+    --gradient-hot:  linear-gradient(100deg, var(--gold-400), var(--amber-500));
+    --gradient-fire: linear-gradient(160deg, var(--gold-500), var(--pink-500));
     --gradient-cool: linear-gradient(100deg, var(--blue-400), var(--pink-400));
 }
 
 
 /* ==========================================================================
    TIER 2b — NON-COLOUR SCALES
-   Same discipline, different property. A fixed set of steps stops you from
-   inventing 13px, 14px, 15px and 17px on four different days.
    ========================================================================== */
 
 :root {
@@ -122,12 +136,13 @@
     --text-lg:   1.25rem;
     --text-xl:   1.75rem;
     --text-2xl:  2.5rem;
-    --text-3xl:  clamp(2.5rem, 7vw, 4rem);   /* the headline - fluid */
+    --text-3xl:  clamp(1.75rem, 4.2vw, 2.75rem);   /* dialled down - was 3.5rem max */
 
-    --tracking-wide:  0.08em;   /* mono fonts breathe better spaced out */
-    --tracking-wider: 0.18em;   /* for small uppercase labels           */
+    --tracking-normal: 0.03em;
+    --tracking-wide:   0.08em;
+    --tracking-wider:  0.18em;
 
-    /* --- Space: a 4px-based scale -------------------------------------- */
+    /* --- Space: 4px scale ---------------------------------------------- */
     --space-1: 0.25rem;
     --space-2: 0.5rem;
     --space-3: 0.75rem;
@@ -136,72 +151,155 @@
     --space-8: 2rem;
     --space-12: 3rem;
 
-    /* --- Radius -------------------------------------------------------- */
+    /* --- Radius --------------------------------------------------------- */
     --radius-sm:   6px;
     --radius-md:   12px;
-    --radius-card: 18px;        /* kept from your original */
+    --radius-card: 18px;
     --radius-pill: 999px;
 
-    /* --- Glow: the neon-sign recipe -------------------------------------
-       A real neon tube has three visual parts: a hot near-white core, a
-       tight saturated halo, and a wide soft bloom. Stacking three shadows
-       of increasing blur and decreasing opacity fakes all three.
-       You pass the colour in via --glow-rgb at the point of use. */
+    /* --- Glow: the neon-tube recipe --------------------------------------
+       A real neon tube has a hot near-white core, a tight saturated halo,
+       and a wide soft bloom. Three stacked shadows fake all three.
+       Pass the colour in by setting --glow-rgb where you use it. */
     --glow-rgb: var(--accent-rgb);
     --glow-sm:
-        0 0 4px  rgb(var(--glow-rgb) / 0.85),
-        0 0 12px rgb(var(--glow-rgb) / 0.45);
+        0 0 4px  rgb(var(--glow-rgb) / 0.75),
+        0 0 12px rgb(var(--glow-rgb) / 0.40);
     --glow-md:
-        0 0 5px  rgb(var(--glow-rgb) / 0.95),
-        0 0 16px rgb(var(--glow-rgb) / 0.55),
-        0 0 34px rgb(var(--glow-rgb) / 0.28);
+        0 0 5px  rgb(var(--glow-rgb) / 0.90),
+        0 0 16px rgb(var(--glow-rgb) / 0.50),
+        0 0 34px rgb(var(--glow-rgb) / 0.25);
     --glow-lg:
         0 0 6px  rgb(var(--glow-rgb) / 1),
-        0 0 22px rgb(var(--glow-rgb) / 0.65),
-        0 0 48px rgb(var(--glow-rgb) / 0.4),
-        0 0 90px rgb(var(--glow-rgb) / 0.2);
+        0 0 22px rgb(var(--glow-rgb) / 0.60),
+        0 0 48px rgb(var(--glow-rgb) / 0.35),
+        0 0 90px rgb(var(--glow-rgb) / 0.18);
 
-    --shadow-button: 0 4px 6px rgb(0 0 0 / 0.2);   /* kept from your original */
+    --shadow-button: 0 4px 14px rgb(var(--accent-rgb) / 0.35);
 
     /* --- Motion --------------------------------------------------------- */
-    --ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
     --speed-fast: 140ms;
     --speed-med:  280ms;
+
+    /* --- Z-index scale --------------------------------------------------
+       Gaps of 10 so you can insert a layer later without renumbering
+       everything. Added now because Update 6 stacks four backgrounds. */
+    --layer-blobs:   10;
+    --layer-texture: 20;
+    --layer-signals: 30;
+    --layer-content: 100;
 }
 
 
 /* ==========================================================================
    TIER 3 — COMPONENT TOKENS
-   One block per component. These are the only variables components.css
-   should read. Note every value points at tier 2, never tier 1.
+   The only variables components.css should read.
+   Every value points at tier 2, never tier 1.
    ========================================================================== */
 
 :root {
-    /* --- Button --------------------------------------------------------- */
-    --btn-bg:          transparent;
-    --btn-fg:          var(--accent);
-    --btn-border:      var(--border-neon);
-    --btn-radius:      var(--radius-pill);
-    --btn-glow:        var(--glow-sm);
-    --btn-glow-hover:  var(--glow-lg);
-    --btn-padding:     var(--space-3) var(--space-8);
+    /* --- Button ---------------------------------------------------------
+       Changed from an outline button to a SOLID magenta pill, because that
+       is what the mockup uses for every primary action. */
+    --btn-bg:         var(--accent);
+    --btn-fg:         var(--white);
+    --btn-border:     transparent;
+    --btn-radius:     var(--radius-pill);
+    --btn-padding:    var(--space-3) var(--space-6);
+    --btn-glow:       var(--shadow-button);
+    --btn-glow-hover: var(--glow-lg);
+
+    /* --- Input ---------------------------------------------------------- */
+    --input-bg:          rgb(var(--purple-600-rgb) / 0.18);
+    --input-border:      var(--border-subtle);
+    --input-border-focus: var(--border-neon);
+    --input-fg:          var(--text-primary);
+    --input-placeholder: var(--text-faint);
+    --input-radius:      var(--radius-pill);
+    --input-padding:     var(--space-3) var(--space-6);
+
+    /* --- Transmission indicator -------------------------------------------
+       The mini animation that plays while the address is in flight. */
+    --transmit-node-size:   7px;
+    --transmit-track-width: 2px;
+    --transmit-idle:        rgb(var(--purple-500-rgb) / 0.75);
+    --transmit-live:        var(--accent);
+    --transmit-done:        var(--accent-secondary);
+    --transmit-speed:       1.5s;
+    /* How long the animation is guaranteed to show, even if the network
+       answers instantly. See the note about flicker in signup.js. */
+    --transmit-min-ms:      1900;
 
     /* --- Glass card ----------------------------------------------------- */
-    --card-bg:      var(--surface-glass);
-    --card-border:  var(--border-subtle);
-    --card-radius:  var(--radius-card);
-    --card-blur:    12px;
-    --card-padding: var(--space-8);
+    --card-bg:        var(--surface-glass);
+    --card-border:    var(--border-subtle);
+    --card-radius:    var(--radius-card);
+    --card-blur:      14px;
+    --card-padding:   var(--space-8);
+    --card-highlight: rgb(var(--white-rgb) / 0.14);   /* inset top edge */
+
+    /* --- Dialog ---------------------------------------------------------- */
+    --dialog-bg:        rgb(var(--purple-600-rgb) / 0.30);
+    --dialog-border:    var(--border-neon);
+    --dialog-radius:    var(--radius-card);
+    --dialog-padding:   var(--space-8);
+    --dialog-max-width: 30rem;
+    --dialog-border-error: rgb(var(--accent-warm-rgb) / 0.6);
+
+    /* --- Content panel ----------------------------------------------------
+       A reading-measure ceiling, in rem. The Bootstrap column controls how
+       the panel RESPONDS across breakpoints; this controls how wide it is
+       allowed to get at all. Two constraints, and the tighter one wins. */
+    --content-max-width: 48rem;
+
+    /* --- Background layers ------------------------------------------------
+       Every knob for the background stack lives here, so tuning the look
+       never means opening effects.css. js/signals.js reads the --signal-*
+       values at runtime too - that keeps the animation's configuration in
+       the design system instead of forking it into a JS object. */
+
+    /* Blobs */
+    /* Was 0.85. The blobs are meant to be a suggestion of light in the
+       room, not the subject. At this level you can still see the colour
+       shift across the page, but the moving dots are clearly the brightest
+       thing on screen - which is what you want the eye drawn to. */
+    --blob-opacity:      0.38;
+    --blob-drift-time:   48s;
+
+    /* Circuit texture */
+    --texture-color:     var(--blue-400);
+    --texture-size:      260px;
+    --texture-opacity:   0.055;  /* the mockup is FAINT - resist raising this */
+    --texture-drift-time: 90s;
+
+    /* Signal dots */
+    --signal-grid:       26;     /* px between turns - matches the texture pitch */
+    --signal-speed:      42;     /* px per second */
+    --signal-density:    24000;  /* one signal per N px2 of viewport */
+    --signal-max:        70;
+    --signal-size:       1.6;
+
+    /* Trail. The canvas is now cleared every frame and each signal redraws
+       its own recent path, so these describe the tail directly rather than
+       hoping an erase-per-frame converges. See the note in signals.js. */
+    --signal-trail-px:    150;   /* how long the tail is, in px            */
+    --signal-trail-alpha: 0.38;  /* how visible the tail is at its brightest */
+    --signal-trail-hold:  0.30;  /* fraction nearest the head held at full  */
+    --signal-sample:      5;     /* px between recorded trail points        */
+    --signal-color-1:    var(--pink-500);
+    --signal-color-2:    var(--blue-400);
+    --signal-color-3:    var(--gold-500);
 
     /* --- Countdown ------------------------------------------------------ */
     --countdown-digit-size:  var(--text-2xl);
     --countdown-digit-color: var(--text-primary);
-    --countdown-label-color: var(--text-muted);
+    --countdown-label-color: var(--accent-tertiary);
     --countdown-label-size:  var(--text-xs);
 
     /* --- Ship ----------------------------------------------------------- */
-    --ship-size:    40px;
-    --ship-stroke:  var(--accent-secondary);
+    --ship-size:         40px;
+    --ship-stroke:       var(--accent-secondary);
     --ship-stroke-width: 1.5;
 }
 
@@ -209,20 +307,17 @@
 /* ==========================================================================
    BRIDGE — HANDING YOUR TOKENS TO BOOTSTRAP
    --------------------------------------------------------------------------
-   Bootstrap 5.3 reads its own values from --bs-* custom properties at
-   runtime. Overwrite them and every Bootstrap component, utility class and
-   default follows your theme without you writing a single override rule.
+   Bootstrap 5.3 reads its values from --bs-* custom properties at runtime.
+   Overwrite them and every Bootstrap component and utility follows your
+   theme with no override rules.
 
-   Two things worth knowing, because both surprise people:
-
+   Two things that surprise people:
    1. Many --bs-* vars come in a matching -rgb pair. Utilities that need
-      transparency (.text-primary uses --bs-primary-rgb) read the RGB one.
-      Set only the hex and half your utilities keep Bootstrap's blue.
-
-   2. There is NO --bs-headings-font-family. Bootstrap 5.3 exposes
-      --bs-heading-color but the headings FONT is a Sass variable, not a CSS
-      one - it does not exist at runtime on the CDN build. So headings are
-      set by hand in base.css. 
+      transparency read the RGB one. Set only the hex and half your
+      utilities keep Bootstrap's blue.
+   2. There is NO --bs-headings-font-family. 5.3 exposes --bs-heading-color,
+      but the headings FONT is a Sass variable and does not exist at runtime
+      on the CDN build - so headings are set by hand in base.css.
    ========================================================================== */
 
 :root {
@@ -232,13 +327,13 @@
     --bs-body-line-height: 1.65;
 
     /* --- Core colours ---------------------------------------------------- */
-    --bs-body-bg:        var(--surface-base);
-    --bs-body-color:     var(--text-body);
-    --bs-heading-color:  var(--text-primary);
-    --bs-emphasis-color: var(--text-primary);
+    --bs-body-bg:         var(--surface-base);
+    --bs-body-color:      var(--text-body);
+    --bs-heading-color:   var(--text-primary);
+    --bs-emphasis-color:  var(--text-primary);
     --bs-secondary-color: var(--text-muted);
 
-    /* --- Theme colours: hex AND rgb, per note 1 above -------------------- */
+    /* --- Theme colours: hex AND rgb, per note 1 --------------------------- */
     --bs-primary:       var(--accent);
     --bs-primary-rgb:   var(--accent-rgb);
     --bs-secondary:     var(--accent-secondary);
@@ -255,8 +350,7 @@
     --bs-border-color:  var(--border-subtle);
     --bs-border-radius: var(--radius-md);
 
-    /* --- Focus ring: keyboard users must still see where they are.
-           Make it match the theme rather than deleting it. ---------------- */
-    --bs-focus-ring-color: rgb(var(--accent-rgb) / 0.4);
+    /* --- Focus ring: keyboard users must still see where they are --------- */
+    --bs-focus-ring-color: rgb(var(--accent-rgb) / 0.45);
     --bs-focus-ring-width: 3px;
 }

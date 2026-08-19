@@ -3,62 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon Page</title>
+    <title>ProjectX Launching Soon</title>
 
-    <!-- 1. Fonts first — so nothing renders in a fallback then jumps -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <!-- 1. Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
-<!-- 2. Bootstrap — the base layer you're customising -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 2. Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<!-- 3. Your layers, in cascade order -->
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/effects.css">
-
+    <!-- 3. Your layers, in cascade order -->
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/effects.css">
 </head>
 <body>
+
     <div class="page-wrapper">
-        <div class="page-inner">
-        <img src="images/logo.png" alt="Logo" class="logo">
 
-        <div class="content">
-            <p>We are working hard to bring you something awesome. Stay tuned!</p>
-            <h1>ProjectX <span>Launching</span> Soon</h1>
-            <div class="launch-time">
-                <div>
-                    <p id="days">00</p>
-                    <span>Days</span>
-                </div>
-                <div>
-                    <p id="hours">00</p>
-                    <span>Hours</span>
-                </div>
-                <div>
-                    <p id="minutes">00</p>
-                    <span>Minutes</span>
-                </div>
-                <div>
-                    <p id="seconds">00</p>
-                    <span>Seconds</span>
-                </div>
-            </div>
-            
-            </div>
-            <button class="notify-btn">
-                Discover More
-                <img src="images/arrow.png" alt="" class="notify-btn__icon">
-            </button>
+        <!-- Layer 3 of the background stack. Sits before .container in the
+             DOM so source order backs up the z-index rather than fighting it.
+             Painted by js/signals.js. -->
+        <canvas class="signal-layer" aria-hidden="true"></canvas>
 
-        <img src="images/ship.png" class="ship">
+        <!-- MOVED OUT OF THE CONTAINER.
+             The header used to be a flex item, so it consumed height at the
+             top and pushed the centred panel down by half its height. Taking
+             it out of flow with position:absolute means the panel now centres
+             against the FULL viewport. See .site-header in layout.css. -->
+        <header class="site-header">
+            <a href="#" class="logo-link">
+                <img src="images/logo.png" alt="ProjectX Logo" class="logo">
+            </a>
+        </header>
+
+        <!-- align-items-center on a min-vh-100 flex box = true vertical
+             centring. No more flex-grow-1 / pb-5 compensation needed. -->
+        <div class="container d-flex align-items-center min-vh-100 py-5">
+
+            <main class="row w-100 justify-content-center">
+                <div class="col-12 col-lg-10 col-xl-9 mx-auto">
+
+                    <div class="glass-panel">
+                        <p class="text-uppercase mb-4 subheader">
+                            We are working hard to bring you something awesome.
+                            <span class="subheader__cta">Stay tuned!</span>
+                        </p>
+
+                        <h1 class="mb-4">Project<span>X</span> Launching Soon</h1>
+
+                        <div class="row row-cols-2 row-cols-sm-4 g-3 countdown">
+                            <div class="col">
+                                <p id="days" class="countdown__digit">00</p>
+                                <span class="countdown__label">Days</span>
+                            </div>
+                            <div class="col">
+                                <p id="hours" class="countdown__digit">00</p>
+                                <span class="countdown__label">Hours</span>
+                            </div>
+                            <div class="col">
+                                <p id="minutes" class="countdown__digit">00</p>
+                                <span class="countdown__label">Minutes</span>
+                            </div>
+                            <div class="col">
+                                <p id="seconds" class="countdown__digit">00</p>
+                                <span class="countdown__label">Seconds</span>
+                            </div>
+                        </div>
+
+                        <!-- novalidate SUPPRESSES THE BROWSER'S BUBBLE UI ONLY.
+                             The constraint API is untouched: required and
+                             type="email" still populate input.validity, and
+                             form.checkValidity() still works. We read those in
+                             signup.js and render our own dialog instead.
+                             This is the correct way to customise validation -
+                             removing `required` would throw away the semantics
+                             along with the UI. -->
+                        <!-- data-endpoint is where the address actually goes.
+                             LEAVE IT EMPTY and signup.js runs in demo mode:
+                             it fakes a successful round trip so you can build
+                             and test the whole flow before choosing a service.
+                             Paste a Formspree / MailerLite / Apps Script URL in
+                             and the same code posts to it for real. Keeping the
+                             endpoint in the MARKUP rather than the script means
+                             switching providers never touches your JS. -->
+                        <form class="signup mt-5" novalidate data-endpoint="">
+
+                            <label for="signup-email" class="visually-hidden">Email address</label>
+
+                            <div class="input-group">
+                                <input
+                                    type="email"
+                                    id="signup-email"
+                                    name="email"
+                                    class="form-control"
+                                    placeholder="Type your signal frequency… a.k.a your email"
+                                    autocomplete="email"
+                                    required
+                                >
+                                <button type="submit" class="btn btn-neon">Notify Me</button>
+                            </div>
+
+                            <!-- HONEYPOT.
+                                 Bots fill in every field they find; humans never
+                                 see this one. If it arrives non-empty, the
+                                 submission is a bot and we drop it silently -
+                                 silently, because telling a bot it was caught
+                                 just teaches whoever wrote it to adapt.
+
+                                 Note it is hidden with CSS, NOT type="hidden" -
+                                 bots skip hidden inputs, which would defeat the
+                                 whole trap. tabindex="-1" and autocomplete="off"
+                                 keep it away from real keyboard users and their
+                                 password managers. -->
+                            <div class="signup__trap" aria-hidden="true">
+                                <label for="signup-website">Leave this field empty</label>
+                                <input type="text" id="signup-website" name="website"
+                                       tabindex="-1" autocomplete="off">
+                            </div>
+
+                            <!-- TRANSMISSION INDICATOR
+                                 Hidden until submit. Built from the same visual
+                                 language as the background - nodes on a trace,
+                                 with a pulse running between them - so the wait
+                                 feels like part of the page rather than a
+                                 generic spinner bolted on.
+                                 aria-live="polite" makes the status line
+                                 announce itself to screen readers as it changes. -->
+                            <div class="transmit" data-transmit hidden>
+                                <div class="transmit__track">
+                                    <span class="transmit__node"></span>
+                                    <span class="transmit__node"></span>
+                                    <span class="transmit__node"></span>
+                                    <span class="transmit__node"></span>
+                                    <span class="transmit__node"></span>
+                                    <span class="transmit__pulse"></span>
+                                </div>
+                                <p class="transmit__status" data-transmit-status
+                                   role="status" aria-live="polite"></p>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </main>
+
+        </div>
+
+        <img src="images/ship.png" class="ship" alt="">
     </div>
-    </div>
 
-    
-    <script src="js/countdown.js"></script>
+
+    <!-- ======================================================================
+         SUCCESS DIALOG
+         ====================================================================== -->
+    <dialog id="signup-success" class="dialog-neon" aria-labelledby="signup-success-title">
+        <p class="dialog-neon__eyebrow">// transmission received</p>
+
+        <h2 id="signup-success-title" class="dialog-neon__title">You&rsquo;re on the list</h2>
+
+        <p class="dialog-neon__body">
+            We&rsquo;ll ping <span class="dialog-neon__email"></span>
+            the moment ProjectX goes live.
+        </p>
+
+        <button type="button" class="btn btn-neon" data-dialog-close>Got it</button>
+    </dialog>
+
+
+    <!-- ======================================================================
+         ERROR DIALOG
+         A separate element rather than one dialog with swapped content: two
+         states that look different and say different things are easier to
+         style, read and debug as two elements.
+         ====================================================================== -->
+    <dialog id="signup-error" class="dialog-neon dialog-neon--error" aria-labelledby="signup-error-title">
+        <p class="dialog-neon__eyebrow">// signal not recognised</p>
+
+        <h2 id="signup-error-title" class="dialog-neon__title">That frequency won&rsquo;t transmit</h2>
+
+        <!-- Filled by signup.js with a message specific to WHAT went wrong -
+             an empty field and a malformed address are different problems and
+             deserve different sentences. -->
+        <p class="dialog-neon__body" data-error-message></p>
+
+        <button type="button" class="btn btn-neon" data-dialog-close>Try again</button>
+    </dialog>
+
+
+    <script src="js/countdown.js" defer></script>
+    <script src="js/signals.js" defer></script>
+    <script src="js/signup.js" defer></script>
 </body>
 </html>

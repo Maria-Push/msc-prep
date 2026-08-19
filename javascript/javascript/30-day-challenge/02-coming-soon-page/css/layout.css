@@ -1,33 +1,62 @@
+/* ==========================================================================
+   LAYOUT
+   Page regions only.
+   ========================================================================== */
+
 .page-wrapper {
-    min-height: 100vh;
-    background-image: url(images/space.jpg);
-    background-position: center;
-    background-size: cover;
-    padding: 0 8%;
-}
-
-
-.page-inner {
+    /* Positioning context for .ship AND .site-header. Comment it out and
+       both jump - they fall back to positioning against the viewport. */
     position: relative;
+
+    /* Flat for now. Update 6 stacks blobs, circuit texture and the signal
+       canvas on top of this. */
+    background-color: var(--surface-base);
 }
 
-.content {
-    top: 65%;
+
+/* --------------------------------------------------------------------------
+   Content sits above the background stack.
+
+   z-index only applies to POSITIONED elements, which is why position:
+   relative is here and not decoration. Without it the container would
+   ignore the z-index entirely and the circuit texture would paint over
+   your headline.
+   -------------------------------------------------------------------------- */
+
+.page-wrapper > .container {
+    position: relative;
+    z-index: var(--layer-content);
+}
+
+
+/* --------------------------------------------------------------------------
+   .site-header
+   --------------------------------------------------------------------------
+   WHY THIS IS OUT OF FLOW, which is the fix for "the panel sits too low".
+
+   Before: the header was a flex item at the top of the container, so it
+   consumed real height. The panel then centred inside WHAT WAS LEFT - which
+   is a box whose top edge starts below the logo. Centring in that leftover
+   box puts the panel roughly half the header's height below the true middle
+   of the screen. Every pixel of header pushed the panel down by half a pixel.
+
+   After: position:absolute takes the header out of flow entirely, so it
+   consumes no height. The container is the full viewport, and
+   `align-items-center` on a `min-vh-100` flex box centres against the
+   whole screen - which is what your eye expects from a coming-soon page.
+
+   The same reasoning applies to any fixed chrome: if something must not
+   affect where the main content centres, it must not occupy flow.
+   -------------------------------------------------------------------------- */
+
+.site-header {
     position: absolute;
-    transform: translateY(-50%);
-    color: var(--color-light);
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-    padding: 30px;
-    border-radius: var(--border-radius);
-}
+    top: 0;
+    left: 0;
+    right: 0;
 
-.content h1 {
-    font-size: -var(--font-size-xxl);
-    font-weight: 600;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
+    padding: var(--space-6) var(--space-8);
 
-.content h1 span {
-    color: var(--color-accent);
+    /* Above the background layers that arrive in Update 6. */
+    z-index: var(--layer-content);
 }
